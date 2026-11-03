@@ -1921,6 +1921,10 @@ FilamentGroupContext build_filament_group_context(
     // restriction in the nozzle-level grouping solver. With the project gate off, only slots matching the
     // active printer preset diameter remain available. Legacy multi-extruder configurations still expose one
     // working diameter per extruder and disable slots that disagree with that representative diameter.
+    // H2C (handle_hotend_as_extruder off) stays on this path: a flat extruder_nozzle_diameter list whose
+    // length matches the slot counts is authoritative, so mixed rack diameters are not collapsed.
+    // Virtual-nozzle padding below stays single-extruder only. H2C manual maps still go through
+    // Print::resolve_manual_nozzle_map.
     {
         std::vector<MultiNozzleUtils::NozzleInfo>& nozzle_list        = context.nozzle_info.nozzle_list;
         const std::vector<double>&                 extruder_diameters = print_config.nozzle_diameter.values;

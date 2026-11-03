@@ -376,8 +376,8 @@ std::optional<PrinterMigrationInfo> collect_printer_migration_info(MachineObject
     // carry multi_nozzle_diameter_mode=1 and a leftover filament_diameter_map. Per-slot
     // diameters are only real on a rack; otherwise the project's diameter is printer_variant.
     const bool multi_diameter_mode = multi_nozzle_diameter_mode_enabled(preset_bundle->project_config) &&
-                                     is_single_ext_multi_nozzle(preset.config);
-    const bool target_has_rack = target_preset != nullptr && is_single_ext_multi_nozzle(target_preset->config);
+                                     supports_multi_nozzle_diameter_mode(preset.config);
+    const bool target_has_rack = target_preset != nullptr && supports_multi_nozzle_diameter_mode(target_preset->config);
     info.compare_flow_type = multi_diameter_mode && target_has_rack;
 
     const size_t slot_count = preset_bundle->filament_presets.size();

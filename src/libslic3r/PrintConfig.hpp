@@ -544,6 +544,11 @@ extern std::vector<std::map<int, int>> get_extruder_ams_count(const std::vector<
 // (extruder_ams_count has a non-zero slot), otherwise -1 (treat the machine as all fixed nozzles).
 extern int get_effective_ams_nozzle_idx(const ConfigBase &config);
 extern bool is_single_ext_multi_nozzle(const ConfigBase &config);
+// Rack machines that can stay in multi_nozzle_diameter_mode: single-extruder rack (H3C)
+// and dual-extruder rack (H2C / O1C2). Plain dual-extruder machines (H2D) are excluded.
+// This does not change single-extruder virtual-nozzle behavior; callers that mean
+// "one extruder" must keep using is_single_ext_multi_nozzle().
+extern bool supports_multi_nozzle_diameter_mode(const ConfigBase &config);
 extern std::vector<std::string> save_extruder_ams_count_to_string(const std::vector<std::map<int, int>> &extruder_ams_count);
 extern NozzleVolumeType convert_to_nvt_type(const std::string& variant_str);
 extern bool is_nozzle_printable_for_filament(NozzleVolumeType machine_nvt, const std::vector<std::string>& filament_variants, bool variants_are_complete);

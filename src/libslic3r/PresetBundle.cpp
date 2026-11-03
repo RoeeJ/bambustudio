@@ -4128,7 +4128,7 @@ void PresetBundle::stamp_printer_nozzle_diameter_mode()
 {
     std::string tag;
     const Preset *printer_base = printers.get_preset_base(printers.get_edited_preset());
-    if (printer_base != nullptr && printer_base->is_system && is_single_ext_multi_nozzle(printer_base->config))
+    if (printer_base != nullptr && printer_base->is_system && supports_multi_nozzle_diameter_mode(printer_base->config))
         tag = multi_nozzle_diameter_mode_enabled(project_config) ? printer_nozzle_diameter_mode_multi() :
                                                                    printer_nozzle_diameter_mode_single();
     printers.get_edited_preset().config.option<ConfigOptionString>("printer_nozzle_diameter_mode", true)->value = tag;
@@ -4139,7 +4139,7 @@ bool PresetBundle::is_multi_nozzle_user_printer_preset(const Preset &preset) con
     if (preset.is_system || preset.is_default)
         return false;
     const Preset *base = printers.get_preset_base(preset);
-    if (base == nullptr || !base->is_system || !is_single_ext_multi_nozzle(base->config) ||
+    if (base == nullptr || !base->is_system || !supports_multi_nozzle_diameter_mode(base->config) ||
         base->config.opt_string("printer_variant") != canonical_multi_nozzle_printer_variant())
         return false;
     const std::string tag = printer_nozzle_diameter_mode_tag(preset.config);
@@ -4245,8 +4245,11 @@ void PresetBundle::validate_filament_nozzle_diameter_selections(const std::map<i
 {
     auto *selected = project_config.option<ConfigOptionStrings>("filament_diameter_map");
     selected->values.resize(filament_presets.size());
+    // Dual-extruder racks (H2C) keep the project flag. filament_volume_map stays a grouping
+    // result on those machines; only the single-extruder rack owns it as a user selection
+    // (see the volume_map block below). Plain dual-extruder machines still force the flag off.
     const bool supports_multi_diameter =
-        is_single_ext_multi_nozzle(printers.get_edited_preset().config);
+        supports_multi_nozzle_diameter_mode(printers.get_edited_preset().config);
     if (!supports_multi_diameter) {
         if (auto *mode = project_config.option<ConfigOptionBool>("multi_nozzle_diameter_mode"))
             mode->value = false;
@@ -4261,18 +4264,11 @@ void PresetBundle::validate_filament_nozzle_diameter_selections(const std::map<i
     // leftover value gets flagged instead of silently normalized -- matching
     // collect_configured_nozzle_diameters()'s own gate keeps the two in agreement.
     //
-    // Gated on is_single_ext_multi_nozzle(), not the broader uses_per_slot_nozzle_diameters(): the
-    // flag/notification behavior below is the Nozzle Settings dialog's companion feature (you swap
-    // a physical nozzle for a different diameter on the same extruder, so a filament slot that was
-    // relying on the removed diameter needs to be called out). Every other consumer of that same
-    // swap-nozzle UX (Plater's Nozzle Settings dialog, FilamentMapDialog, FilamentGroupPopup,
-    // NotificationManager, PresetComboBoxes, PartPlate) already restricts itself to
-    // is_single_ext_multi_nozzle(), which excludes a multi-extruder machine whose nozzles live one
-    // per extruder rather than several on the same extruder. This function was the odd one out
-    // still using the broader check, so a multi-extruder machine's filament_diameter_map leftovers
-    // (stale values from an earlier machine, or never normalized because it never routes through
-    // the dialog that would clear them) were being flagged/red instead of silently normalized like
-    // a plain machine.
+    // The flag is kept for a nozzle rack that can mix diameters (H3C and, experimentally, H2C).
+    // uses_per_slot_nozzle_diameters() is wider than that: it is also true for H2D, whose two
+    // nozzles are one diameter per extruder and must still be normalized here. The volume-map
+    // repair further down stays on is_single_ext_multi_nozzle() so an H2C grouping result is
+    // not overwritten.
     const bool multi_diameter_mode =
         multi_nozzle_diameter_mode_enabled(project_config) && supports_multi_diameter;
     const std::vector<std::string> retained_selections =
