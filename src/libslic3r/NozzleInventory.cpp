@@ -134,7 +134,7 @@ SelectedPrinter read_selected_printer(const PresetCollection &printers)
     printer.model                   = config.opt_string("printer_model");
     printer.history_key             = base ? base->name : selected.name;
     printer.diameter                = format_diameter_to_str(string_to_double_decimal_point(config.opt_string("printer_variant")));
-    printer.supports_multi_diameter = is_single_ext_multi_nozzle(config);
+    printer.supports_multi_diameter = supports_multi_nozzle_diameter_mode(config);
 
     const auto  *nozzle_diameters = config.option<ConfigOptionFloatsNullable>("nozzle_diameter");
     const auto  *max_counts       = config.option<ConfigOptionIntsNullable>("extruder_max_nozzle_count");

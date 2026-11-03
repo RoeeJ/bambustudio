@@ -1209,6 +1209,22 @@ bool is_single_ext_multi_nozzle(const ConfigBase& config)
                                            [](int v) { return v > 1; });
 }
 
+bool supports_multi_nozzle_diameter_mode(const ConfigBase& config)
+{
+    // A rack is some extruder_max_nozzle_count > 1. H3C is the single-extruder case.
+    // H2C is two nozzle_diameter entries plus a rack on the right. H2D has two diameters
+    // and no rack, so it stays on the one-diameter-per-print path.
+    const auto* max_nozzle_count = config.option<ConfigOptionIntsNullable>("extruder_max_nozzle_count");
+    if (!max_nozzle_count ||
+        !std::any_of(max_nozzle_count->values.begin(), max_nozzle_count->values.end(),
+                     [](int v) { return v > 1; }))
+        return false;
+    if (is_single_ext_multi_nozzle(config))
+        return true;
+    const auto* nozzle_diameters = config.option<ConfigOptionFloatsNullable>("nozzle_diameter");
+    return nozzle_diameters && nozzle_diameters->size() == 2;
+}
+
 std::vector<std::map<NozzleVolumeType,int>> get_extruder_nozzle_stats(const std::vector<std::string>& strs)
 {
     std::vector<std::map<NozzleVolumeType,int>> extruder_nozzle_counts;

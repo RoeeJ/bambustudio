@@ -84,7 +84,7 @@ public:
     void        SetMultiDiameterModeCallback(MultiDiameterModeCallback callback) { m_multi_diameter_mode_callback = callback; }
     void        SetShowTitle(bool show);
     // Show or hide the Single-/Multi-diameter mode selector. Only the sidebar panel is built with one, so
-    // this is a no-op elsewhere. The selector belongs to single-extruder multi-nozzle printers only.
+    // this is a no-op elsewhere. Shown for nozzle-rack printers that can mix diameters (H3C and H2C).
     void        ShowModeSelector(bool show);
     /**
      * \brief Whether the diameter buttons show.
